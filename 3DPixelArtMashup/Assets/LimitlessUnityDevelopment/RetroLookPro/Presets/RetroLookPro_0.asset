@@ -67,7 +67,7 @@ MonoBehaviour:
     f_show_Artefacts: 0
     f_show_Extra: 0
     f_show_Bypass: 0
-    f_show_TV_mode: 1
+    f_show_TV_mode: 0
     f_show_Bottom_Noise_mode: 0
     b_Mode: 0
     b_Bleed: 1

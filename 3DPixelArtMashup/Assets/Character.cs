@@ -62,6 +62,8 @@ public class Character : MonoBehaviour
     bool stateCycleActive;
     bool attackCycleActive;
 
+    public bool isExhausted;
+
     void Start()
     {
         if (doFrameCap)
@@ -136,8 +138,16 @@ public class Character : MonoBehaviour
 
         if (Input.GetButtonDown("Dash") && !stateCycleActive)
         {
+            if (!isExhausted)
+            {
+                StaminaReduce(dashStaminaCost);
+                StartCoroutine(StateCycle(dashDuration, state.DASH, state.DEFAULT));
+            }
+
+            /*
             StaminaReduce(dashStaminaCost);
             StartCoroutine(StateCycle(dashDuration, state.DASH, state.DEFAULT));
+            */
         }
 
         if (Input.GetButton("Block"))
@@ -145,8 +155,16 @@ public class Character : MonoBehaviour
 
         if (Input.GetButtonDown("Attack") && !stateCycleActive)
         {
+            if (!isExhausted)
+            {
+                StaminaReduce(attackStaminaCost);
+                StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
+            }
+
+            /*
             StaminaReduce(attackStaminaCost);
             StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
+            */
         }
     }
 
@@ -170,8 +188,16 @@ public class Character : MonoBehaviour
 
         if (Input.GetButtonDown("Dash") && !stateCycleActive)
         {
+            if (!isExhausted)
+            {
+                StaminaReduce(dashStaminaCost);
+                StartCoroutine(StateCycle(dashDuration, state.DASH, state.TARGET));
+            }
+
+            /*
             StaminaReduce(dashStaminaCost);
             StartCoroutine(StateCycle(dashDuration, state.DASH, state.TARGET));
+            */
         }
 
         if (Input.GetButton("Block"))
@@ -179,8 +205,11 @@ public class Character : MonoBehaviour
 
         if (Input.GetButtonDown("Attack") && !stateCycleActive)
         {
-            StaminaReduce(attackStaminaCost);
-            StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.TARGET));
+            if (!isExhausted)
+            {
+                StaminaReduce(attackStaminaCost);
+                StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
+            }
         }
     }
 
@@ -197,8 +226,15 @@ public class Character : MonoBehaviour
 
     void Move()
     {
-        transform.position += transform.right * Input.GetAxis("Horizontal") * movementSpeed * Time.deltaTime;
-        transform.position += transform.forward * Input.GetAxis("Vertical") * movementSpeed * Time.deltaTime;
+        float spd;
+
+        if (isExhausted)
+            spd = movementSpeed / 2f;
+        else
+            spd = movementSpeed;
+
+        transform.position += transform.right * Input.GetAxis("Horizontal") * spd * Time.deltaTime;
+        transform.position += transform.forward * Input.GetAxis("Vertical") * spd * Time.deltaTime;
     }
 
     void LookAt()
@@ -262,7 +298,10 @@ public class Character : MonoBehaviour
         if (stamina <= 1f - staminaRegenSpeed)
             stamina += staminaRegenSpeed;
         else
+        {
             stamina = 1f;
+            isExhausted = false;
+        }
     }
 
     void StaminaReduce(float amount)
@@ -270,7 +309,10 @@ public class Character : MonoBehaviour
         if (stamina >= amount)
             stamina -= amount;
         else
+        {
             stamina = 0f;
+            isExhausted = true;
+        }
     }
 
     void Animate()
