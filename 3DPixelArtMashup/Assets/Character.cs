@@ -57,7 +57,8 @@ public class Character : MonoBehaviour
     [HideInInspector]
     public float stamina;
 
-    int targetIndex;
+    [HideInInspector]
+    public int targetIndex;
 
     bool stateCycleActive;
     bool attackCycleActive;
@@ -132,6 +133,8 @@ public class Character : MonoBehaviour
         {
             targetList = targetList.OrderBy(x => Vector3.Distance(transform.position, x.transform.position)).ToList();
 
+            targetIndicatorGameobject.GetComponent<MeshRenderer>().enabled = true;
+
             isTargeting = true;
             playerState = state.TARGET;
         }
@@ -143,11 +146,6 @@ public class Character : MonoBehaviour
                 StaminaReduce(dashStaminaCost);
                 StartCoroutine(StateCycle(dashDuration, state.DASH, state.DEFAULT));
             }
-
-            /*
-            StaminaReduce(dashStaminaCost);
-            StartCoroutine(StateCycle(dashDuration, state.DASH, state.DEFAULT));
-            */
         }
 
         if (Input.GetButton("Block"))
@@ -160,11 +158,6 @@ public class Character : MonoBehaviour
                 StaminaReduce(attackStaminaCost);
                 StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
             }
-
-            /*
-            StaminaReduce(attackStaminaCost);
-            StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
-            */
         }
     }
 
@@ -178,10 +171,12 @@ public class Character : MonoBehaviour
                 targetIndex = 0;
         }
 
-        if (Input.GetButtonDown("Cancel Target") || targetTransform == null)
+        if (Input.GetButtonDown("Cancel Target") || targetList.Count == 0)
         {
             targetIndex = 0;
             isTargeting = false;
+
+            targetIndicatorGameobject.GetComponent<MeshRenderer>().enabled = false;
 
             playerState = state.DEFAULT;
         }
@@ -193,11 +188,6 @@ public class Character : MonoBehaviour
                 StaminaReduce(dashStaminaCost);
                 StartCoroutine(StateCycle(dashDuration, state.DASH, state.TARGET));
             }
-
-            /*
-            StaminaReduce(dashStaminaCost);
-            StartCoroutine(StateCycle(dashDuration, state.DASH, state.TARGET));
-            */
         }
 
         if (Input.GetButton("Block"))
@@ -208,7 +198,7 @@ public class Character : MonoBehaviour
             if (!isExhausted)
             {
                 StaminaReduce(attackStaminaCost);
-                StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.DEFAULT));
+                StartCoroutine(StateCycle(attackDuration, state.ATTACK, state.TARGET));
             }
         }
     }
@@ -266,8 +256,6 @@ public class Character : MonoBehaviour
     {
         targetTransform = targetList[targetIndex].transform;
         targetIndicatorGameobject.transform.position = new Vector3(targetTransform.position.x, targetIndicatorGameobject.transform.position.y, targetTransform.position.z);
-
-        targetIndicatorGameobject.GetComponent<MeshRenderer>().enabled = isTargeting;
     }
 
     void Dash()

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public enum state { DEFAULT, ATTACK };
+    public enum state { DEFAULT, ATTACK, HIT };
 
     public Character characterScript;
     public float maxHp;
@@ -18,6 +18,8 @@ public class Enemy : MonoBehaviour
     public float attackRange;
     public float attackFrequency;
     public float attackCooldownDuration;
+
+    public float hitDuration;
 
     public float movementSpeed;
 
@@ -38,7 +40,7 @@ public class Enemy : MonoBehaviour
     bool hitShieldActive;
 
     bool stateCycleActive;
-    bool attackCycleActive;
+    public bool attackCycleActive;
 
     bool canAttack = true;
 
@@ -69,7 +71,12 @@ public class Enemy : MonoBehaviour
                 break;
 
             case state.ATTACK:
+                TakeDamage();
                 Attack();
+                Animate();
+                break;
+
+            case state.HIT:
                 Animate();
                 break;
         }
@@ -91,7 +98,17 @@ public class Enemy : MonoBehaviour
         if (damageToTake > 0f && !hitShieldActive)
         {
             hp -= damageToTake;
-            StartCoroutine(HitShieldCycle(hitShieldDuration));
+
+            StopAllCoroutines();
+
+            attackCycleActive = false;
+            hitCollider.enabled = false;
+
+            if (!canAttack)
+                StartCoroutine(AttackCooldownCycle(attackCooldownDuration + hitDuration));
+
+            StartCoroutine(StateCycle(hitDuration, state.HIT, state.DEFAULT));
+            StartCoroutine(HitShieldCycle(hitShieldDuration + hitDuration));
         }
         else
             damageToTake = 0f;
@@ -102,7 +119,12 @@ public class Enemy : MonoBehaviour
         if (hp <= 0f)
         {
             characterScript.targetList.Remove(this.gameObject);
-            characterScript.isTargeting = false;
+
+            if (characterScript.targetList.Count >= characterScript.targetIndex + 2)
+                characterScript.targetIndex++;
+            else
+                characterScript.targetIndex = 0;
+
             Destroy(this.gameObject);
         }
     }
@@ -139,11 +161,19 @@ public class Enemy : MonoBehaviour
             case state.DEFAULT:
                 modelAnimator.SetBool("Walk", !playerIsInRange);
                 modelAnimator.SetBool("Attack", false);
+                modelAnimator.SetBool("Hit", false);
                 break;
             
             case state.ATTACK:
                 modelAnimator.SetBool("Walk", false);
                 modelAnimator.SetBool("Attack", true);
+                modelAnimator.SetBool("Hit", false);
+                break;
+            
+            case state.HIT:
+                modelAnimator.SetBool("Walk", false);
+                modelAnimator.SetBool("Attack", false);
+                modelAnimator.SetBool("Hit", true);
                 break;
         }
     }
