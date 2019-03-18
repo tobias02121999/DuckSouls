@@ -46,14 +46,10 @@ public class Enemy : MonoBehaviour
 
     bool playerIsInRange;
 
-    IEnumerator attackCycleCoroutine = null;
-
     void Start()
     {
         characterScript.targetList.Add(this.gameObject);
         hp = maxHp;
-
-        attackCycleCoroutine = AttackCycle(attackHitWaitDuration, attackDuration - attackHitWaitDuration);
     }
 
     void Update()
@@ -75,7 +71,6 @@ public class Enemy : MonoBehaviour
                 break;
 
             case state.ATTACK:
-                TakeDamage();
                 Attack();
                 Animate();
                 break;
@@ -103,15 +98,6 @@ public class Enemy : MonoBehaviour
         {
             hp -= damageToTake;
 
-            StopAllCoroutines();
-            StopCoroutine(attackCycleCoroutine);
-
-            attackCycleActive = false;
-            hitCollider.enabled = false;
-
-            if (!canAttack)
-                StartCoroutine(AttackCooldownCycle(attackCooldownDuration + hitDuration));
-
             StartCoroutine(StateCycle(hitDuration, state.HIT, state.DEFAULT));
             StartCoroutine(HitShieldCycle(hitShieldDuration + hitDuration));
         }
@@ -137,7 +123,7 @@ public class Enemy : MonoBehaviour
     void Attack()
     {
         if (!attackCycleActive)
-            StartCoroutine(attackCycleCoroutine);
+            StartCoroutine(AttackCycle(attackHitWaitDuration, attackDuration - attackHitWaitDuration));
     }
 
     void Move()
